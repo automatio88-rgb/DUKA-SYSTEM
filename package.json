@@ -1,0 +1,32 @@
+{
+  "name": "dukaos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Duka System: the offline-first digital business partner for a Kenyan mini-mart.",
+  "workspaces": ["packages/shared", "apps/web", "apps/api"],
+  "scripts": {
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm run dev -w @duka/api\" \"npm run dev -w @duka/web\"",
+    "dev:web": "npm run dev -w @duka/web",
+    "build": "npm run build -w @duka/web",
+    "typecheck": "npm run typecheck -w @duka/shared && npm run typecheck -w @duka/web && npm run typecheck -w @duka/api",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "android": "npm run build && npx cap sync android && npx cap open android"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "supabase": "^1.190.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  },
+  "engines": { "node": ">=20" }
+}
