@@ -1,0 +1,18 @@
+project_id = "duka-system"
+
+[api]
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+port = 54323
+
+[auth]
+enabled = true
+
+[functions.api]
+verify_jwt = false # the function verifies its own PIN-session JWT (hono/jwt)
