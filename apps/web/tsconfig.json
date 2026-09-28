@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "baseUrl": ".", "paths": { "@duka/shared": ["../../packages/shared/src/index.ts"], "@/*": ["src/*"] } },
+  "include": ["src", "vite.config.ts"]
+}

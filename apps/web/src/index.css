@@ -1,0 +1,58 @@
+@import '@fontsource/sora/600.css';
+@import '@fontsource/sora/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+@import './design/tokens.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+[data-theme='dark'] body { letter-spacing: 0.005em; }
+h1, h2, h3 { font-family: Sora, system-ui, sans-serif; text-wrap: balance; letter-spacing: -0.01em; }
+.num { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+@layer components {
+  /* Phone frame: this is a mobile app. On wide screens we centre the phone, never stretch it. */
+  .app-frame { max-width: 480px; margin: 0 auto; min-height: 100%; position: relative; background: var(--bg); }
+  @media (min-width: 520px) { .app-frame { box-shadow: 0 0 0 1px var(--line), var(--e3); } }
+  .screen { padding: max(env(safe-area-inset-top), 16px) 16px calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px); }
+  .surface { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--e2); }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; }
+  .divide > * + * { border-top: 1px solid var(--line); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 20px; border-radius: 12px; font-weight: 600; font-size: 16px; transition: transform .12s var(--ease-out), background-color .2s, opacity .2s; user-select: none; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: .45; pointer-events: none; }
+  .btn:focus-visible, .tap:focus-visible { outline: 2px solid var(--maize); outline-offset: 2px; }
+  .btn-brand { background: var(--brand); color: var(--brand-ink); }
+  .btn-ink { background: var(--ink); color: var(--bg); }
+  .btn-ghost { background: var(--s2); color: var(--ink); border: 1px solid var(--line); }
+  .btn-leaf { background: var(--leaf); color: #06140d; }
+  .btn-block { width: 100%; }
+  .tap { transition: transform .12s var(--ease-out), background-color .15s; }
+  .tap:active { transform: scale(0.96); }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; background: var(--s2); border: 1px solid var(--line); font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .chip[aria-pressed='true'] { background: var(--ink); color: var(--bg); border-color: transparent; }
+  .field { width: 100%; height: 54px; border-radius: 12px; background: var(--s2); border: 1px solid var(--line); padding: 0 16px; font-size: 17px; color: var(--ink); }
+  .field:focus { outline: none; border-color: var(--maize); box-shadow: 0 0 0 3px var(--maize-soft); }
+  .field::placeholder { color: var(--faint); }
+  .badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .b-clay { background: var(--clay-soft); color: var(--clay); } .b-maize { background: var(--maize-soft); color: var(--maize); } .b-leaf { background: var(--leaf-soft); color: var(--leaf); } .b-mute { background: var(--s2); color: var(--muted); }
+
+  /* Signature detail 1: the kitabu ruling — faint notebook lines behind ledger screens */
+  .ruled { background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 32px); }
+  /* Signature detail 2: receipt perforation edge on the day's takings */
+  .receipt-edge { position: relative; }
+  .receipt-edge::after { content: ''; position: absolute; left: 0; right: 0; bottom: -7px; height: 8px; background: radial-gradient(circle at 6px -1px, transparent 6px, var(--s1) 6.5px) 0 0 / 12px 8px repeat-x; }
+  .scroll-x { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .scroll-x::-webkit-scrollbar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+@media print { .no-print { display: none !important; } body { background: #fff; color: #111; } .surface { box-shadow: none; border-color: #ddd; } }

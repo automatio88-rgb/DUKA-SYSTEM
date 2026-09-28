@@ -1,0 +1,24 @@
+/* Duka System design tokens (§14). Dark is the default: shops run late under one bulb. */
+:root, [data-theme='dark'] {
+  --bg: #121417; --s1: #191c20; --s2: #20242a; --s3: #2a2f36;
+  --ink: #f3eee6; --muted: #a8a197; --faint: #6f6a63; --line: rgba(243, 238, 230, 0.08);
+  --brand: #d9480f; --brand-ink: #fff4ec; --brand-soft: rgba(217, 72, 15, 0.16);
+  --maize: #f5a623; --maize-soft: rgba(245, 166, 35, 0.14);
+  --clay: #c4502c; --clay-soft: rgba(196, 80, 44, 0.16);
+  --leaf: #2fa36f; --leaf-soft: rgba(31, 138, 91, 0.18);
+  --e1: 0 1px 0 rgba(255,255,255,.03) inset; --e2: 0 1px 0 rgba(255,255,255,.04) inset, 0 8px 24px -12px rgba(0,0,0,.6); --e3: 0 24px 60px -20px rgba(0,0,0,.75);
+  --rule: rgba(245, 166, 35, 0.06);
+  color-scheme: dark;
+}
+[data-theme='light'] {
+  --bg: #faf6ef; --s1: #fffdf9; --s2: #f3ede3; --s3: #e9e1d4;
+  --ink: #1c1a17; --muted: #6b645a; --faint: #9a9287; --line: rgba(28, 26, 23, 0.08);
+  --brand: #c43f0c; --brand-ink: #fff8f2; --brand-soft: rgba(217, 72, 15, 0.1);
+  --maize: #c98300; --maize-soft: rgba(245, 166, 35, 0.16);
+  --clay: #b0431f; --clay-soft: rgba(196, 80, 44, 0.1);
+  --leaf: #1f8a5b; --leaf-soft: rgba(31, 138, 91, 0.1);
+  --e1: 0 1px 2px rgba(60, 40, 20, .06); --e2: 0 1px 2px rgba(60,40,20,.06), 0 10px 30px -14px rgba(60,40,20,.22); --e3: 0 30px 60px -24px rgba(60,40,20,.35);
+  --rule: rgba(196, 80, 44, 0.07);
+  color-scheme: light;
+}
+:root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-io: cubic-bezier(0.65, 0, 0.35, 1); --nav-h: 76px; }
