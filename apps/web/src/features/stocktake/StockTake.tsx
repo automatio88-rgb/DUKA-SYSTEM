@@ -11,7 +11,11 @@ export default function StockTake() {
   const t = useT(); const { say, lang } = useApp(s => ({ say: s.say, lang: s.lang }));
   const [loc, setLoc] = useState<'shop' | 'store'>('shop'); const [cat, setCat] = useState<string | null>(null); const [counts, setCounts] = useState<Record<string, string>>({}); const [countId, setCountId] = useState<string | null>(null); const [dem, setDem] = useState('');
   const v = useData(e => ({ cats: e.db.categories.slice().sort((a, b) => a.sort - b.sort), prods: e.db.products.filter(p => p.active && p.category_id === cat), items: countId ? e.db.stock_count_items.filter(i => i.count_id === countId) : [] }), [cat, countId]);
-  const start = (c: string) => { setCat(c); const name = v.cats.find(x => x.id === c)?.name ?? ''; const prods = useApp.getState() && v.cats ? undefined : undefined; void prods; const count = act(e => e.startCount(loc, name, e.db.products.filter(p => p.active && p.category_id === c).map(p => p.id))); setCountId(count.id); setCounts({}); };
+  const start = (c: string) => {
+    const name = v.cats.find(x => x.id === c)?.name ?? '';
+    const count = act(e => e.startCount(loc, name, e.db.products.filter(p => p.active && p.category_id === c).map(p => p.id)));
+    setCat(c); setCountId(count.id); setCounts({});
+  };
   const post = () => { const r = act(e => e.postCount(countId!, Object.fromEntries(Object.entries(counts).filter(([, x]) => x !== '').map(([k, x]) => [k, +x])))); say(r.variances.length ? `${r.variances.length} ${lang === 'sw' ? 'zimetofautiana' : 'off'} · KSh ${r.lossValue}` : t('cash.balanced'), r.variances.length ? 'warn' : 'ok'); setCountId(null); setCat(null); };
   return (
     <Page>
