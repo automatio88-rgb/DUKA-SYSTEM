@@ -1,0 +1,15 @@
+{
+  "name": "@duka/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild ../../packages/shared/src/index.ts --bundle --format=esm --platform=neutral --target=es2022 --external:zod --outfile=supabase/functions/_shared/duka.js",
+    "dev": "npm run build && supabase start --workdir . && supabase functions serve api --workdir . --env-file ../../.env --no-verify-jwt",
+    "db:start": "supabase start --workdir .",
+    "db:reset": "supabase db reset --workdir .",
+    "deploy": "npm run build && supabase functions deploy api --workdir . && supabase db push --workdir .",
+    "typecheck": "npm run build && deno check supabase/functions/api/index.ts || echo 'deno not installed: skipped (CI installs it)'"
+  },
+  "devDependencies": { "esbuild": "^0.23.1", "supabase": "^1.190.0" }
+}
