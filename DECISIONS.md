@@ -1,25 +1,19 @@
-# DECISIONS.md — every autonomous call, with the reason
+# DECISIONS.md
 
-| # | Decision | Why |
-|---|---|---|
-| D1 | **Backend = Supabase** (Postgres + RLS + one Edge Function `api` running Hono on Deno). Replaces Cloudflare Workers + D1 from §3. | Owner addendum. Hono is kept so the `/api/v1/...` surface in §6 is unchanged; only the runtime moved. |
-| D2 | **Frontend hosting = Netlify** (`netlify.toml` at root). | Owner addendum. SPA redirect + immutable asset caching + no-cache service worker. |
-| D3 | **"Mobile app, not web app"** → a mobile-first installable PWA **plus a Capacitor Android shell** (`apps/web/capacitor.config.ts`). No desktop layout is designed; wide screens render the phone frame centred. | §18 bans a native Android rewrite, the owner wants a mobile app. PWA+Capacitor gives a real home-screen/Play-Store app from the same code with offline IndexedDB, zero rewrite. |
-| D4 | **Shared `DukaEngine`** in `packages/shared` holds ALL business logic (sales, ledger, stock, cash, M-Pesa, jobs, agent tools). The web app runs it locally over Dexie data (offline-first); the edge function runs the same code server-side. | One implementation = no drift between offline and online behaviour; fully unit-testable without a DB. |
-| D5 | Stock levels are **never stored on the client**; they are derived from `stock_moves` (Σ in − out). Server keeps a `stock_levels` table maintained by trigger for fast reads. | §5 invariant + §13 merge policy (movements merge, never overwrite). |
-| D6 | Money = **integer shillings**. | Dukas don't trade cents; eliminates float bugs. Cost prices per sell-unit may carry 2 decimals (e.g. KSh 47.50 airtime). |
-| D7 | Primary brand colour "deep ink orange" had no hex in the brief → **#D9480F** (oklch ≈ 0.59 0.19 40). | Deep, inky, not neon; sits between amber accent (#F5A623) and terracotta alert (#C4502C) without clashing, keeps AA contrast on charcoal. |
-| D8 | Dark theme default (brief) overrides generic "light first" design guidance. | Shops are used at night under a single bulb. |
-| D9 | Framer Motion for state/transition motion, **GSAP** (owner skill list) only for number counters and scroll-driven report reveals. | Each where it's strongest; GSAP core is ~25KB and tree-shaken. |
-| D10 | Material 3 principles adopted for mobile ergonomics: bottom navigation bar, FAB-style primary action, bottom sheets instead of modals, 48dp minimum targets, state layers on press. Visual language stays custom (§14 anti-slop). shadcn-style headless primitives are hand-written (Sheet, Segmented, Keypad) to keep bundle small. | Owner skill list + thumb-zone law. |
-| D11 | Loan-Readiness Pack needs 6 months but the demo has 30 days itemised → shop settings carry **`history` month summaries** (entered from the paper books during onboarding; demo seeds 5 months). Live months are computed from real sales and merged. | Honest: real shops have months of history in the kitabu, not in the app. |
-| D12 | Busy-Mode lump sums with no items estimate COGS at the shop's trailing item margin until reconciled. | §1 "tolerate imperfect data"; profit stays roughly right on busy days. |
-| D13 | M-Pesa auto-match order: debtor phone (0.95) → pending M-Pesa POS sale by exact amount ±15 min (0.85) → debtor name token + amount ≤ balance+50 (0.7) → inbox. | Phone is the strongest signal; masked till numbers fall back to amount/time. |
-| D14 | M-Pesa POS sales are recorded as `mpesa_pending` until an SMS confirms them. | Lets the paste/webhook close the loop and catches "fake message" fraud. |
-| D15 | PIN hash = SHA-256(`duka:v1:shopId:pin`). Server adds per-device rate limiting + signed JWT (HS256, 12h). | 4-digit PINs are device auth, not secrets; speed at the counter matters more. |
-| D16 | Reminders are queued on the configured weekday (default Saturday) when balance > threshold; tone escalates gentle (<14d since last payment) → firm (14–29d) → final (30d+). | Mirrors how owners actually chase debts: payday weekend, softly first. |
-| D17 | Tests run with Vitest in CI. During the autonomous build (sandbox without npm registry access) the same test files were executed with a tiny Node 22 vitest-compatible shim: **92/92 passing**. | Proves logic now; CI re-runs with real Vitest. |
-| D18 | Three.js scene uses only primitives (Box/Cylinder/Plane) and is `React.lazy`-loaded on auth/onboarding only; low-end devices (≤4 cores or no WebGL) get an SVG illustration. | §14 performance budget. |
-| D19 | Airtime scratch cards modelled as products with sell_unit "card" and ~5% margin. | That's how dukas book them. |
-| D20 | Web "preview" deliverable: the full React app is in the repo; a self-contained single-file interactive preview of the same app (same engine logic, same demo data shape) is shared for instant phone testing before Netlify deploy. | Hosting is explicitly deferred by the owner; he still needs something to tap today. |
-| D21 | GitHub Actions workflow is shipped as `docs/ci.github-workflow.yml` (copy into `.github/workflows/`). | The connected GitHub token lacks the `workflow` scope. |
+See commit history for D1–D20 detail. Summary:
+- D1 Supabase (Postgres+RLS+Hono edge function) replaces Workers/D1. D2 Netlify hosting.
+- D3 Mobile app = installable PWA + Capacitor Android shell; phone-frame layout, bottom nav, bottom sheets, 48dp+ targets.
+- D4 One shared DukaEngine runs offline on the phone, on the server and in tests.
+- D5 Stock never stored client-side; derived from moves; server trigger keeps stock_levels.
+- D6 Integer shillings. D7 Primary "deep ink orange" = #D9480F. D8 Dark default.
+- D9 Framer Motion for state motion, GSAP for counters/report reveals. D10 Material 3 ergonomics, hand-rolled shadcn-style primitives.
+- D11 Loan pack merges live months with 5 months of notebook history. D12 Busy-mode COGS estimated at trailing margin.
+- D13 M-Pesa match order: phone → pending sale amount±15min → name+balance. D14 M-Pesa POS sales stay pending until SMS confirms.
+- D15 SHA-256 PIN hash + 5-try lockout + 12h JWT (role authenticated + shop_id claim for RLS). D16 Reminder tone by days since last payment (14/30).
+- D17 Tests executed in sandbox via Node 22 vitest shim (92/92); CI runs Vitest.
+- D18 3D scene lazy + SVG fallback (≤4 cores / no WebGL / reduced motion). D19 Airtime as products. D20 Preview = Netlify deploy (sandbox had no network to host).
+- D21 CI workflow shipped in docs/ (token lacked `workflow` scope).
+- D22 Duka Brain runs locally (mock parser) by default so it works offline; `VITE_REMOTE_BRAIN=1` routes to the API/LLM.
+- D23 Server default locations are retired by trigger when the phone's own location ids sync in.
+- D24 On-device `tick()` on login/focus replaces cron for alerts, reminders, briefings.
+- D25 Reminders sent via WhatsApp share link (wa.me) from the phone until WhatsApp Cloud keys exist.
