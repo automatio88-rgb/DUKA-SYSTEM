@@ -28,7 +28,7 @@ app.onError((err, c) => {
 // ─── Auth (§F1) ───────────────────────────────────────────────
 const attempts = new Map<string, { n: number; until: number }>();
 app.post('/auth/setup', async c => {
-  const b = z.object({ shop: z.object({ id: z.string().uuid(), name: z.string().min(2), owner_name: z.string().min(2), phone: z.string().optional(), language: z.enum(['en', 'sw']), mpesa_type: z.string() }), owner: z.object({ id: z.string().uuid(), pin: z.string() }), staff: z.object({ id: z.string().uuid(), name: z.string(), pin: z.string() }).optional(), demo: z.boolean().optional() }).parse(await c.req.json());
+  const b = z.object({ shop: z.object({ id: z.string().uuid(), name: z.string().min(2), owner_name: z.string().min(2), phone: z.string().optional(), language: z.enum(['en', 'sw']), mpesa_type: z.string() }), owner: z.object({ id: z.string().uuid(), pin: z.string() }), staff: z.object({ id: z.string().uuid(), name: z.string(), pin: z.string() }).optional(), locations: z.array(z.object({ id: z.string().uuid(), name: z.string(), type: z.string() })).optional(), demo: z.boolean().optional() }).parse(await c.req.json());
   if (!isValidPin(b.owner.pin)) return c.json({ error: 'bad_pin' }, 400);
   if (b.demo) {
     const d = await buildDemo(new Date(), { lang: b.shop.language });
@@ -42,7 +42,8 @@ app.post('/auth/setup', async c => {
   const users = [{ id: b.owner.id, shop_id: b.shop.id, name: b.shop.owner_name, role: 'owner', pin_hash: await hashPin(b.shop.id, b.owner.pin), active: true }];
   if (b.staff && isValidPin(b.staff.pin)) users.push({ id: b.staff.id, shop_id: b.shop.id, name: b.staff.name, role: 'staff', pin_hash: await hashPin(b.shop.id, b.staff.pin), active: true });
   await sb().from('users').insert(users);
-  await sb().from('locations').insert([{ id: crypto.randomUUID(), shop_id: b.shop.id, name: 'Duka', type: 'shop', created_at: now }, { id: crypto.randomUUID(), shop_id: b.shop.id, name: 'Store', type: 'store', created_at: now }]);
+  const locs = b.locations?.length ? b.locations.map(l => ({ ...l, shop_id: b.shop.id, created_at: now })) : [{ id: crypto.randomUUID(), shop_id: b.shop.id, name: 'Duka', type: 'shop', created_at: now }, { id: crypto.randomUUID(), shop_id: b.shop.id, name: 'Store', type: 'store', created_at: now }];
+  await sb().from('locations').upsert(locs, { onConflict: 'id' });
   const { data } = await sb().from('shops').select('shop_code').eq('id', b.shop.id).single();
   return c.json({ shopId: b.shop.id, shopCode: data?.shop_code });
 });
@@ -99,7 +100,7 @@ app.post('/sales', async c => {
 app.post('/sales/:id/void', async c => { await withEngine(c.get('auth'), e => e.voidSale(c.req.param('id'))); return c.json({ ok: true }); });
 
 // ─── Sync (§13) ───────────────────────────────────────────────
-const SYNCABLE = new Set(['products', 'categories', 'customers', 'suppliers', 'purchases', 'purchase_items', 'price_history', 'sales', 'sale_items', 'credit_ledger', 'stock_moves', 'stock_batches', 'payments_inbox', 'cash_sessions', 'expenses', 'stock_counts', 'stock_count_items', 'demand_log', 'agent_messages', 'alerts', 'reminders', 'audit_log', 'shops', 'users']);
+const SYNCABLE = new Set(['locations', 'products', 'categories', 'customers', 'suppliers', 'purchases', 'purchase_items', 'price_history', 'sales', 'sale_items', 'credit_ledger', 'stock_moves', 'stock_batches', 'payments_inbox', 'cash_sessions', 'expenses', 'stock_counts', 'stock_count_items', 'demand_log', 'agent_messages', 'alerts', 'reminders', 'audit_log', 'shops', 'users']);
 const Op = z.object({ id: z.string().uuid(), device_id: z.string(), entity: z.string(), entity_id: z.string().uuid(), op: z.enum(['upsert', 'delete']), payload_json: z.record(z.any()), client_ts: z.string() });
 app.post('/sync/push', async c => {
   const a = c.get('auth'); const { ops } = z.object({ ops: z.array(Op).max(500) }).parse(await c.req.json());
@@ -112,8 +113,12 @@ app.post('/sync/push', async c => {
   // 2) apply in client order; append-only tables never overwrite; stock_levels + balance_after are re-derived by DB triggers
   const byTable = new Map<string, any[]>();
   for (const o of apply) { const row = o.op === 'delete' ? { id: o.entity_id, deleted_at: new Date().toISOString() } : { ...o.payload_json, id: o.entity_id }; if (o.entity !== 'shops') row.shop_id = a.shopId; if (!byTable.has(o.entity)) byTable.set(o.entity, []); byTable.get(o.entity)!.push(row); }
-  const ORDER = ['shops', 'users', 'categories', 'products', 'customers', 'suppliers', 'purchases', 'purchase_items', 'price_history', 'sales', 'sale_items', 'credit_ledger', 'stock_moves', 'stock_batches', 'payments_inbox', 'cash_sessions', 'expenses', 'stock_counts', 'stock_count_items', 'demand_log', 'agent_messages', 'alerts', 'reminders', 'audit_log'];
-  for (const t of ORDER) { const rows = byTable.get(t); if (!rows) continue; const { error: e2 } = await sb().from(t).upsert(rows, { onConflict: 'id', ignoreDuplicates: APPEND_ONLY.has(t) }); if (e2) throw new Error(`${t}: ${e2.message}`); }
+  const ORDER = ['shops', 'users', 'locations', 'categories', 'products', 'customers', 'suppliers', 'purchases', 'purchase_items', 'price_history', 'sales', 'sale_items', 'credit_ledger', 'stock_moves', 'stock_batches', 'payments_inbox', 'cash_sessions', 'expenses', 'stock_counts', 'stock_count_items', 'demand_log', 'agent_messages', 'alerts', 'reminders', 'audit_log'];
+  for (const t of ORDER) {
+    const rows = byTable.get(t); if (!rows) continue;
+    const { error: e2 } = await sb().from(t).upsert(rows, { onConflict: 'id', ignoreDuplicates: APPEND_ONLY.has(t) });
+    if (e2) { await sb().from('sync_oplog').delete().in('id', [...freshIds]); throw new Error(`${t}: ${e2.message}`); }
+  }
   const { data: cur } = await sb().from('sync_oplog').select('seq').eq('shop_id', a.shopId).order('seq', { ascending: false }).limit(1);
   return c.json({ applied: apply.length, skipped: ops.length - apply.length, cursor: cur?.[0]?.seq ?? 0 });
 });

@@ -36,3 +36,10 @@ Business truth = `packages/shared/src/engine.ts`. Web: `apps/web/src/lib/data.ts
 
 ## Go-live checklist
 Supabase project + migrations · function secrets · Netlify env `VITE_API_URL` · WhatsApp template approved · SMS forwarder or Daraja C2B URL registered · change demo PINs.
+
+## Update 2026-10-05 (bot)
+- `npm install`, typecheck, lint, 92 unit tests, build, Playwright e2e (3/3) all green.
+- Full-stack preview runs in the VM: local Supabase (Docker) + Edge Function API, web served by `scripts/preview-server.mjs` (PWA + `/fn` proxy, `/readyz`).
+- Fixes: sheet/overlay exit no longer blocks taps; sync pushes oldest-first + parents before children; server keeps client location ids (`/auth/setup` accepts `locations`, `locations` syncable); failed push un-records ops so retries aren't deduped away.
+- Removed `apps/web/src/lib/data.fix.ts`.
+- Still to do: real hosting (Netlify + Supabase cloud), PNG icons, real LLM/WhatsApp/Daraja keys.

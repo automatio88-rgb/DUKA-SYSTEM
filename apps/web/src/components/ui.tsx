@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { AnimatePresence, motion, useDragControls } from 'framer-motion';
+import { AnimatePresence, motion, useDragControls, useIsPresent } from 'framer-motion';
 import gsap from 'gsap';
 import { ChevronLeft } from 'lucide-react';
 import { ksh, initials, tileColor } from '@/lib/format';
@@ -39,13 +39,19 @@ export function Avatar({ name, size = 44, round = false }: { name: string; size?
   return <span aria-hidden className="grid place-items-center shrink-0 font-display font-semibold" style={{ width: size, height: size, borderRadius: round ? 999 : 12, background: c.bg, color: c.fg, fontSize: size * 0.36 }}>{initials(name)}</span>;
 }
 
+/** Stops intercepting taps the moment the sheet starts exiting (exit springs otherwise block the nav). */
+function SheetShell({ children }: { children: ReactNode }) {
+  const present = useIsPresent();
+  return <div className="fixed inset-0 z-50 flex justify-center" style={{ pointerEvents: present ? 'auto' : 'none' }}>{children}</div>;
+}
+
 /** Bottom sheet (Material 3 pattern) with spring physics + drag-to-dismiss. Used instead of modals. */
 export function Sheet({ open, onClose, title, children, tall }: { open: boolean; onClose: () => void; title?: string; children: ReactNode; tall?: boolean }) {
   const controls = useDragControls();
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex justify-center">
+        <SheetShell key="sheet">
           <motion.div className="absolute inset-0 bg-black/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.section role="dialog" aria-label={title}
             className={`absolute bottom-0 w-full max-w-[480px] rounded-t-[24px] bg-s1 border-t border-line shadow-e3 flex flex-col ${tall ? 'h-[88dvh]' : 'max-h-[88dvh]'}`}
@@ -56,7 +62,7 @@ export function Sheet({ open, onClose, title, children, tall }: { open: boolean;
             {title && <h2 className="px-5 pb-3 text-lg font-semibold">{title}</h2>}
             <div className="px-5 pb-[calc(20px+env(safe-area-inset-bottom))] overflow-y-auto">{children}</div>
           </motion.section>
-        </div>
+        </SheetShell>
       )}
     </AnimatePresence>
   );

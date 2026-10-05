@@ -5,6 +5,7 @@
  */
 import { idb, data, refreshEngine, meta, setMeta, deviceId } from './data';
 import { useApp } from '@/app/store';
+import { TABLES } from '@duka/shared';
 
 export const API = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '');
 let timer: number | undefined; let running = false;
@@ -19,7 +20,7 @@ export async function api<T = any>(path: string, init: RequestInit = {}): Promis
 export async function remoteLogin(userId: string, pin: string) {
   if (!API || !navigator.onLine) return;
   const shopCode = await meta<string>('shopCode'); if (!shopCode) return;
-  try { const r = await api<{ token: string }>('/auth/pin-login', { method: 'POST', body: JSON.stringify({ shopCode, userId, pin, deviceId: deviceId() }) }); await setMeta('token', r.token); } catch { /* stay offline-capable */ }
+  try { const r = await api<{ token: string }>('/auth/pin-login', { method: 'POST', body: JSON.stringify({ shopCode, userId, pin, deviceId: deviceId() }) }); await setMeta('token', r.token); void syncOnce(); } catch { /* stay offline-capable */ }
 }
 
 export async function syncOnce() {
@@ -31,7 +32,8 @@ export async function syncOnce() {
   if (running) return; running = true; s.setSync('syncing');
   try {
     for (;;) {
-      const batch = await idb.oplog.where('synced').equals(0).limit(400).toArray();
+      const rank = new Map<string, number>(TABLES.map((t, i) => [t, i]));
+      const batch = (await idb.oplog.where('synced').equals(0).toArray()).sort((a, b) => a.client_ts.localeCompare(b.client_ts) || (rank.get(a.entity) ?? 99) - (rank.get(b.entity) ?? 99)).slice(0, 400);
       if (!batch.length) break;
       await api('/sync/push', { method: 'POST', body: JSON.stringify({ ops: batch.map(({ synced: _s, shop_id: _sh, ...o }) => o) }) });
       await idb.oplog.bulkPut(batch.map(o => ({ ...o, synced: 1 as const })));

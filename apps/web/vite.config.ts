@@ -24,5 +24,5 @@ export default defineConfig({
     rollupOptions: { output: { manualChunks: { three: ['three', '@react-three/fiber'], charts: ['recharts'] } } },
     chunkSizeWarningLimit: 700,
   },
-  server: { port: 5173, proxy: { '/api': { target: 'http://127.0.0.1:54321/functions/v1/api', changeOrigin: true } } },
+  server: { port: 5173, proxy: { '/fn': { target: 'http://127.0.0.1:54321/functions/v1', changeOrigin: true, rewrite: p => p.replace(/^\/fn/, '') } } },
 });

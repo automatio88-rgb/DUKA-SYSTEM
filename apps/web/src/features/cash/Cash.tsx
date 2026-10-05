@@ -36,7 +36,7 @@ export default function Cash() {
           <div className="grid grid-cols-2 gap-2 mt-6"><button className="btn btn-ghost" onClick={() => setSheet('expense')}>{t('cash.expense')}</button><button className="btn btn-brand" onClick={() => setSheet('close')} data-testid="close-day">{t('cash.close')}</button></div>
         </>
       ) : (
-        <section className="surface p-5 text-center"><p className="text-muted mb-4">{lang === 'sw' ? 'Anza siku kwa kuhesabu pesa ya kuanzia kwa droo.' : 'Start the day by counting the float in the drawer.'}</p><button className="btn btn-brand btn-block" onClick={() => { setVal('2000'); setSheet('open'); }}>{t('cash.open')}</button></section>
+        <section className="surface p-5 text-center"><p className="text-muted mb-4">{lang === 'sw' ? 'Anza siku kwa kuhesabu pesa ya kuanzia kwa droo.' : 'Start the day by counting the float in the drawer.'}</p><button className="btn btn-brand btn-block" onClick={() => { setVal('2000'); setSheet('open'); }} data-testid="open-day">{t('cash.open')}</button></section>
       )}
       {owner && v.hist.length > 0 && (
         <section className="mt-8"><h2 className="text-[17px] font-semibold">{t('cash.trend')}</h2><p className="text-[13px] text-muted">{lang === 'sw' ? 'Chini ya mstari = pesa imepungua' : 'Below the line = cash went missing'}</p>

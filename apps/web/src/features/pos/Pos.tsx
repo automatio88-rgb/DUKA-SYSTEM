@@ -80,7 +80,7 @@ export function Pos() {
       <QtySheet p={qtyFor} onClose={() => setQtyFor(null)} onAdd={(p, n) => { add(p, n); setQtyFor(null); }} />
 
       <AnimatePresence>{done && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-bg/90 backdrop-blur-sm" data-testid="sale-done">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, pointerEvents: 'none' }} onClick={() => setDone(null)} className="fixed inset-0 z-50 grid place-items-center bg-bg/90 backdrop-blur-sm" data-testid="sale-done">
           <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ ease: EASE, duration: 0.4 }} className="text-center"><DrawnCheck /><p className="mt-4 text-lg font-semibold">{t('pos.done')}</p><p className="num text-3xl font-semibold mt-1">{ksh(done.total)}</p>{done.change != null && done.change > 0 && <p className="mt-2 text-maize num text-xl">{t('pos.change')}: {ksh(done.change)}</p>}</motion.div>
         </motion.div>
       )}</AnimatePresence>

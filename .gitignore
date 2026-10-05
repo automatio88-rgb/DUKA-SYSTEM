@@ -11,3 +11,7 @@ test-results/
 supabase/.temp/
 supabase/.branches/
 apps/web/android/
+
+apps/api/supabase/.branches/
+apps/api/supabase/.temp/
+.env

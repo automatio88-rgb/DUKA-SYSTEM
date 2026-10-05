@@ -17,6 +17,7 @@ test('smoke: demo → cash sale → credit sale → M-Pesa paste → transfer �
   await tiles.nth(0).click(); await tiles.nth(1).click();
   await page.getByTestId('quick-cash').click();
   await expect(page.getByTestId('sale-done')).toBeVisible();
+  await page.getByTestId('sale-done').click(); await expect(page.getByTestId('sale-done')).toBeHidden();
 
   // Credit sale
   await tiles.nth(2).click();
@@ -26,6 +27,7 @@ test('smoke: demo → cash sale → credit sale → M-Pesa paste → transfer �
   await page.getByRole('button', { name: /Baba Kevin/ }).first().click();
   await page.getByTestId('charge').click();
   await expect(page.getByTestId('sale-done')).toBeVisible();
+  await page.getByTestId('sale-done').click(); await expect(page.getByTestId('sale-done')).toBeHidden();
 
   // M-Pesa paste from a known debtor (Mama Njeri 0711223344)
   await page.getByTestId('nav-more').click();
@@ -46,7 +48,11 @@ test('smoke: demo → cash sale → credit sale → M-Pesa paste → transfer �
   // Close cash session
   await page.getByTestId('nav-more').click();
   await page.getByTestId('more-cash').click();
-  await page.getByTestId('close-day').click();
+  // Demo may start with the drawer closed (depends on time of day): open with the default float first
+  const closeDay = page.getByTestId('close-day'); const openDay = page.getByTestId('open-day');
+  await expect(closeDay.or(openDay)).toBeVisible();
+  if (await openDay.isVisible()) { await openDay.click(); await page.getByTestId('cash-confirm').click(); await expect(page.getByRole('dialog')).toBeHidden(); }
+  await closeDay.click();
   for (const d of '5000') await page.getByRole('button', { name: d, exact: true }).last().click();
   await page.getByTestId('cash-confirm').click();
   await page.goBack();
@@ -63,6 +69,7 @@ test('offline: a sale made in airplane mode is kept and queued for sync', async 
   await page.getByTestId('pos-grid').locator('button').first().click();
   await page.getByTestId('quick-cash').click();
   await expect(page.getByTestId('sale-done')).toBeVisible();
+  await page.getByTestId('sale-done').click(); await expect(page.getByTestId('sale-done')).toBeHidden();
   await expect(page.getByTestId('sync-pill')).toContainText(/Offline|Nje ya mtandao/);
   await page.reload();
   // survives reload from IndexedDB
