@@ -85,7 +85,7 @@ app.get('/:entity', async c => {
   const { data, error } = await sb().from(e).select(cols).eq('shop_id', a.shopId).is('deleted_at', null).limit(5000);
   if (error) throw error;
   // Staff never receive cost prices (§8)
-  if (e === 'products' && a.role !== 'owner') return c.json((data as any[]).map(({ cost_price, ...r }) => r));
+  if (e === 'products' && a.role !== 'owner') return c.json((data as any[]).map(({ cost_price: _c, ...r }) => r));
   return c.json(data);
 });
 

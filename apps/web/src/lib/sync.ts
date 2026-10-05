@@ -33,7 +33,7 @@ export async function syncOnce() {
     for (;;) {
       const batch = await idb.oplog.where('synced').equals(0).limit(400).toArray();
       if (!batch.length) break;
-      await api('/sync/push', { method: 'POST', body: JSON.stringify({ ops: batch.map(({ synced, shop_id, ...o }) => o) }) });
+      await api('/sync/push', { method: 'POST', body: JSON.stringify({ ops: batch.map(({ synced: _s, shop_id: _sh, ...o }) => o) }) });
       await idb.oplog.bulkPut(batch.map(o => ({ ...o, synced: 1 as const })));
     }
     const since = (await meta<number>('cursor')) ?? 0;
